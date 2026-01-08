@@ -2,16 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Win Go Pro Analyzer</title>
+<title>WinGo Pro Analyzer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 *{box-sizing:border-box}
 body{
   margin:0;
-  padding:0;
   background:#0b1d26;
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   color:#fff;
 }
 .container{
@@ -41,6 +40,12 @@ body{
   text-align:center;
   border-radius:8px;
   font-size:13px;
+  cursor:pointer;
+}
+.tab.active{
+  background:#00ffae;
+  color:#000;
+  font-weight:bold;
 }
 input{
   width:100%;
@@ -48,14 +53,23 @@ input{
   border-radius:8px;
   border:none;
   margin-top:10px;
-  font-size:14px;
+}
+button{
+  width:100%;
+  padding:12px;
+  margin-top:15px;
+  border:none;
+  border-radius:10px;
+  background:#e53935;
+  color:#fff;
+  font-size:16px;
+  font-weight:bold;
 }
 .section{
   background:#1e4454;
   padding:10px;
   border-radius:8px;
   margin-top:10px;
-  font-size:14px;
 }
 .progress{
   width:100%;
@@ -70,36 +84,13 @@ input{
   width:0%;
   background:#00ffae;
 }
-button{
-  width:100%;
-  padding:12px;
-  margin-top:15px;
-  border:none;
-  border-radius:10px;
-  background:#e53935;
-  color:#fff;
-  font-size:16px;
-  font-weight:bold;
-}
 .result{
   text-align:center;
   margin-top:15px;
 }
-.big{
-  color:#f39c12;
-  font-size:26px;
-  font-weight:bold;
-}
-.small{
-  color:#3498db;
-  font-size:26px;
-  font-weight:bold;
-}
-.wait{
-  color:#cccccc;
-  font-size:22px;
-  font-weight:bold;
-}
+.big{color:#f39c12;font-size:26px;font-weight:bold}
+.small{color:#3498db;font-size:26px;font-weight:bold}
+.wait{color:#ccc;font-size:22px;font-weight:bold}
 .note{
   text-align:center;
   font-size:12px;
@@ -112,92 +103,78 @@ button{
 <body>
 
 <div class="container">
-
-  <div class="header">PakGames Win Go – Pro Analyzer</div>
+  <div class="header">PakGames WinGo – Pro Analyzer</div>
 
   <div class="tabs">
-    <div class="tab">1 Min</div>
-    <div class="tab">3 Min</div>
-    <div class="tab">5 Min</div>
+    <div class="tab active" onclick="setMode('30s')">30 Sec</div>
+    <div class="tab" onclick="setMode('1m')">1 Min</div>
+    <div class="tab" onclick="setMode('3m')">3 Min</div>
+    <div class="tab" onclick="setMode('5m')">5 Min</div>
   </div>
 
-  <input id="history" placeholder="Last results likho (example: 2,0,4,6,8)">
+  <input id="history" placeholder="Example: 1,0,7,2,2">
 
   <button onclick="analyze()">Analyze Now</button>
 
-  <div class="section">
-    📊 Trend
-    <div class="progress"><div class="bar" id="b1"></div></div>
-  </div>
-
-  <div class="section">
-    📈 Momentum
-    <div class="progress"><div class="bar" id="b2"></div></div>
-  </div>
-
-  <div class="section">
-    🔁 Pattern
-    <div class="progress"><div class="bar" id="b3"></div></div>
-  </div>
-
-  <div class="section">
-    ⚖️ Balance
-    <div class="progress"><div class="bar" id="b4"></div></div>
-  </div>
+  <div class="section">📊 Trend<div class="progress"><div class="bar" id="b1"></div></div></div>
+  <div class="section">📈 Momentum<div class="progress"><div class="bar" id="b2"></div></div></div>
+  <div class="section">🔁 Pattern<div class="progress"><div class="bar" id="b3"></div></div></div>
+  <div class="section">⚖️ Balance<div class="progress"><div class="bar" id="b4"></div></div></div>
 
   <div class="result" id="finalResult">
     <div class="wait">WAIT FOR DATA</div>
   </div>
 
-  <div class="note">
-    Personal analysis tool • Probability based • No guarantee
-  </div>
-
+  <div class="note">Personal analyzer • Probability based • No guarantee</div>
 </div>
 
 <script>
+let mode = "30s";
+
+function setMode(m){
+  mode = m;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  event.target.classList.add("active");
+  document.getElementById("finalResult").innerHTML =
+    `<div class="wait">${m.toUpperCase()} MODE SELECTED</div>`;
+}
+
 function analyze(){
-  let input = document.getElementById("history").value;
-  if(input.trim()===""){
-    alert("Please last results enter karo");
+  let input = document.getElementById("history").value.trim();
+  if(!input){
+    alert("Results likho (example: 1,0,7)");
     return;
   }
 
-  let arr = input.split(",").map(x=>parseInt(x.trim())).filter(x=>!isNaN(x));
+  let arr = input.split(",").map(n=>parseInt(n.trim())).filter(n=>!isNaN(n));
   if(arr.length < 3){
-    alert("Kam az kam 3 results dalo");
+    alert("Kam az kam 3 results chahiye");
     return;
   }
 
   let big=0, small=0;
-  arr.forEach(n=>{
-    if(n>=5) big++; else small++;
-  });
+  arr.forEach(n=> n>=5 ? big++ : small++);
 
   let t1 = Math.min(90, 40 + big*8);
   let t2 = Math.min(90, 40 + (arr[arr.length-1]>=5 ? 20 : 10));
   let t3 = Math.min(90, 40 + Math.abs(big-small)*6);
   let t4 = Math.min(90, 50 + (big>small ? 10 : -5));
 
-  document.getElementById("b1").style.width = t1+"%";
-  document.getElementById("b2").style.width = t2+"%";
-  document.getElementById("b3").style.width = t3+"%";
-  document.getElementById("b4").style.width = t4+"%";
+  b1.style.width=t1+"%";
+  b2.style.width=t2+"%";
+  b3.style.width=t3+"%";
+  b4.style.width=t4+"%";
 
-  let bigP = Math.round((t1+t2+t3+t4)/4);
-  let smallP = 100 - bigP;
+  let bigP=Math.round((t1+t2+t3+t4)/4);
+  let smallP=100-bigP;
 
-  let out = document.getElementById("finalResult");
-
-  if(bigP < 55 && smallP < 55){
-    out.innerHTML = `<div class="wait">NO TRADE</div>`;
-  }else if(bigP > smallP){
-    out.innerHTML = `<div class="big">BIG ${bigP}%</div><div class="small">SMALL ${smallP}%</div>`;
+  if(bigP>smallP){
+    finalResult.innerHTML=`<div class="big">BIG ${bigP}%</div><div class="small">SMALL ${smallP}%</div>`;
   }else{
-    out.innerHTML = `<div class="small">SMALL ${smallP}%</div><div class="big">BIG ${bigP}%</div>`;
+    finalResult.innerHTML=`<div class="small">SMALL ${smallP}%</div><div class="big">BIG ${bigP}%</div>`;
   }
 }
 </script>
 
 </body>
-</html>
+  </html>
